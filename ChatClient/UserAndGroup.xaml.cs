@@ -19,12 +19,29 @@ namespace ChatClient
     /// </summary>
     public partial class UserAndGroup : Window
     {
+        // 通过该对象使用MainWindow中的各个函数.
+        MainWindow win;
         // Just for trial.
         private int number = 0;
 
-        public UserAndGroup()
+
+        public UserAndGroup(MainWindow obj)
         {
             InitializeComponent();
+            this.win = obj;
+            this.Closed += new EventHandler(this.win.thread_Closed);
+        }
+
+        public void updateUserList(string[] userNameList)
+        {
+            int length = userNameList.Length;
+            for (int i = 0; i < length; ++i)
+            {
+                this.listview.Dispatcher.Invoke((Action)delegate()
+                {
+                    this.listview.Items.Add(userNameList[i]);
+                });
+            }
         }
 
         // Simulate adding elements into the listview.

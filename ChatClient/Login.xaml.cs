@@ -20,14 +20,21 @@ namespace ChatClient
     /// </summary>
     public partial class Login : Window
     {
-        //通过该对象使用MainWindow中的各个函数.
+        // 通过该对象使用MainWindow中的各个函数.
         MainWindow win;
+        // 程序最主要的窗体.
+        UserAndGroup uag;
+        //属性
+        public UserAndGroup Uag
+        {
+            get { return this.uag; }
+        }
 
         public Login(MainWindow obj)
         {
             InitializeComponent();
             this.win = obj;
-            //没有调用thread_Closed啊?
+
             this.Closed += new EventHandler(this.win.thread_Closed);
         }
 
@@ -35,33 +42,56 @@ namespace ChatClient
         {
             Button bt = (Button)sender;
             switch (bt.Tag.ToString())
-            {                
+            {
+                #region login
                 case "login":
                     {
-                        this.Hide();
-                        UserAndGroup uag = new UserAndGroup();
-                        uag.Show();
-
-                        // 发送上线包
-                        Message msg = new Message();
-                        msg.FromUserName = "Charlie";
-                        msg.ToUserName = "Lee";
-                        msg.DateLine = DateTime.Now.ToString();
-                        msg.Type = 0;
-                        msg.GroupName = "633";
-                        msg.MessageContent = "Hello!";
-
-                        try
+                        string userName = this.userNameTextBox.Text.Trim();
+                        if (string.IsNullOrEmpty(userName))
                         {
-                            this.win.Socket.Send(msg);
+                            MessageBox.Show("请输入合法的用户名");
                         }
-                        catch (Exception ecp)
+                        else
                         {
-                            MessageBox.Show(ecp.Message, "错误");
-                            return;
+                            this.Hide();
+                            uag = new UserAndGroup(this.win);
+                            uag.Show();
+
+                            /*//public int MessageID;
+                            string fromUserName;
+                            string toUserName;
+                            //int isRead;
+                            string dateLine;
+                            int type;
+                            string messageContent;
+                            //string filePath;
+                            string groupName;
+                            //string fromIP;
+                            //int isJoin;*/
+
+                            // 发送上线包
+                            Message msg = new Message();
+                            // lxw
+                            msg.FromUserName = userName;//"Charlie";
+                            msg.ToUserName = "Lee";
+                            msg.DateLine = DateTime.Now.ToString();
+                            msg.Type = 0;
+                            msg.GroupName = "633";
+                            msg.MessageContent = "Hello!";
+
+                            try
+                            {
+                                this.win.Socket.Send(msg);
+                            }
+                            catch (Exception ecp)
+                            {
+                                MessageBox.Show(ecp.Message, "错误");
+                                return;
+                            }
                         }
                     }
                     break;
+                #endregion
             }
         }
     }

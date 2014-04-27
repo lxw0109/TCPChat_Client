@@ -38,6 +38,7 @@ namespace ChatClient
         string filepath = "";
         int Size;
         //lxw
+        Login ln;
         //属性
         public SocketControl Socket
         {
@@ -59,7 +60,7 @@ namespace ChatClient
             listenThread.Start();
 
             //lxw
-            Login ln = new Login(this);
+            ln = new Login(this);
             ln.Show();
         }
 
@@ -91,7 +92,7 @@ namespace ChatClient
             ReceiveAction = msg =>
             {
                 User user = new User();
-
+                // lxw ADD HERE.
                 switch (msg.Type)
                 {
                     case 1://用户列表
@@ -99,6 +100,8 @@ namespace ChatClient
                         {
                             UpdateGetMsgTextBox(false, msg.MessageContent);
                         });
+                        string[] userNameList = msg.MessageContent.Split(',');
+                        ln.Uag.updateUserList(userNameList);
                         break;
                         ////////////添加消息事件
                     case 11://加群回应

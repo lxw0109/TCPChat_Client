@@ -1,0 +1,17 @@
+﻿<Window x:Class="ChatClient.Comunicate"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Comunicate" Height="517.895" Width="704.211" Icon="Image/lxw.ico" ResizeMode="CanMinimize">
+    <Window.Background>
+        <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.GradientActiveCaptionColorKey}}"/>
+    </Window.Background>
+    <Grid>
+        <TextBox HorizontalAlignment="Left" Height="297" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="483"/>
+        <TextBox HorizontalAlignment="Left" Height="117" Margin="0,336,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="483"/>
+        <Button Content="File" HorizontalAlignment="Left" Margin="10,311,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Content="History" HorizontalAlignment="Left" Margin="90,311,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Content="Send" HorizontalAlignment="Left" Margin="408,458,0,0" VerticalAlignment="Top" Width="75"/>
+        <TextBox HorizontalAlignment="Left" Height="469" Margin="496,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="202"/>
+
+    </Grid>
+</Window>

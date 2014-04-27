@@ -39,11 +39,18 @@ namespace ChatClient
         int Size;
         //lxw
         Login ln;
+
         //属性
         public SocketControl Socket
         {
-            get { return socket; }
+            get { return this.socket; }
         }
+        public Login Ln
+        {
+            get { return this.ln; }
+        }
+
+
 
         public MainWindow()
         {
@@ -95,15 +102,66 @@ namespace ChatClient
                 // lxw ADD HERE.
                 switch (msg.Type)
                 {
-                    case 1://用户列表
-                        InfoTB.Dispatcher.Invoke((Action)delegate()
+                    case 1://用户列表[接收]                        
                         {
-                            UpdateGetMsgTextBox(false, msg.MessageContent);
-                        });
-                        string[] userNameList = msg.MessageContent.Split(',');
-                        ln.Uag.updateUserList(userNameList);
+                            /*InfoTB.Dispatcher.Invoke((Action)delegate()
+                            {
+                                UpdateGetMsgTextBox(false, msg.MessageContent);
+                            });*/                            
+                            /*string[] userNameList = msg.MessageContent.Split(',');
+                            ln.Uag.updateUserList(userNameList);*/
+
+                            // 接收到的msg.MessageContent是一个List<User>的JSON字符串
+                            List<User> userList = JsonConvert.DeserializeObject<List<User>>(msg.MessageContent);
+                            ln.Uag.updateUserList(userList);
+                        }
                         break;
-                        ////////////添加消息事件
+                    case 3://查询是否在线的请求[接收该包 then 发送新包]
+                        {
+                            // 收到 type == 3后,发送type == 4(在线请求的回应)的包
+                            Message newmsg = new Message();
+                            newmsg.FromUserName = this.ln.UserName;//"Charlie";
+                            //newmsg.ToUserName = "Lee";
+                            //newmsg.DateLine = DateTime.Now.ToString();
+                            newmsg.Type = 4;    //在线请求的回应
+                            //newmsg.MessageContent = "在线";
+                            try
+                            {
+                                this.socket.Send(newmsg);
+                            }
+                            catch (Exception ecp)
+                            {
+                                MessageBox.Show(ecp.Message, "错误");
+                                return;
+                            }
+                        }
+                        break;
+                    case 5://接收文字消息
+                        {
+                            // 1.显示出来[与该FromUserName的聊天窗口已经打开] 或者 2.添加到FromUserName的MsgList中[还没有打开聊天窗口]
+                            string srcUser = msg.FromUserName;
+                            int index = 0;
+                            foreach(UserInList uil in this.ln.Uag.UserInList_List)
+                            {                                
+                                if(uil.USER.UserName == srcUser)    // 找到要处理的用户
+                                {
+                                    if (uil.ComWin == null)     // 2. 没有打开聊天窗口
+                                    {
+                                        uil.MsgList.Add(msg);
+                                        // UserAndGroup窗体中提示有未读消息
+                                        this.ln.Uag.updateUserListItem(index, uil.MsgList.Count);
+                                    }
+                                    else    // 1. 已经打开聊天窗口
+                                    {
+                                        uil.ComWin.updateMsgTextBox(srcUser + "  " + msg.DateLine + " :\r\n" + 
+                                                                    msg.MessageContent + "\r\n");
+                                    }
+                                    break;
+                                }
+                                index ++;
+                            }
+                        }
+                        break;
                     case 11://加群回应
                         InfoTB.Dispatcher.Invoke((Action)delegate()
                         {
@@ -111,39 +169,40 @@ namespace ChatClient
                         });
                         break;
                     case 7://发送文件请求
-                        InfoTB.Dispatcher.Invoke((Action)delegate()
                         {
-                            UpdateGetMsgTextBox(false, msg.FromUserName+"准备向您发送文件"+msg.MessageContent);
-                        });
+                            InfoTB.Dispatcher.Invoke((Action)delegate()
+                            {
+                                UpdateGetMsgTextBox(false, msg.FromUserName + "准备向您发送文件" + msg.MessageContent);
+                            });
 
-                        Message newmsg = new Message();
-                        newmsg.FromUserName = "Charlie";
-                        newmsg.ToUserName = "Lee";
-                        newmsg.DateLine = DateTime.Now.ToString();
-                        newmsg.Type = 8;
-                        newmsg.MessageContent = "拒绝";
-                        newmsg.FilePath = msg.FilePath;
+                            Message newmsg = new Message();
+                            newmsg.FromUserName = "Charlie";
+                            newmsg.ToUserName = "Lee";
+                            newmsg.DateLine = DateTime.Now.ToString();
+                            newmsg.Type = 8;
+                            newmsg.MessageContent = "拒绝";
+                            newmsg.FilePath = msg.FilePath;
 
-                        if (MessageBox.Show(string.Format(
-                        "是否接收文件 {0}，来自 {1}。",
-                        msg.MessageContent,
-                        msg.FromUserName),
-                        "接收文件",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Question) == MessageBoxResult.Yes)
-                        {
-                            newmsg.MessageContent = "同意";
+                            if (MessageBox.Show(string.Format(
+                            "是否接收文件 {0}，来自 {1}。",
+                            msg.MessageContent,
+                            msg.FromUserName),
+                            "接收文件",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            {
+                                newmsg.MessageContent = "同意";
+                            }
+                            try
+                            {
+                                socket.Send(newmsg);
+                            }
+                            catch (Exception ecp)
+                            {
+                                MessageBox.Show(ecp.Message, "错误");
+                                return;
+                            }
                         }
-                        try
-                        {
-                            socket.Send(newmsg);
-                        }
-                        catch (Exception ecp)
-                        {
-                            MessageBox.Show(ecp.Message, "错误");
-                            return;
-                        }
-
                         break;
                     case 8://文件请求回应
                         if (msg.MessageContent == "同意")

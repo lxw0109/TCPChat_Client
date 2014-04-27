@@ -68,6 +68,7 @@
     <Compile Include="UserAndGroup.xaml.cs">
       <DependentUpon>UserAndGroup.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserInList.cs" />
     <Page Include="Comunicate.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

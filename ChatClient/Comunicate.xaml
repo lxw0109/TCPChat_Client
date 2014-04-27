@@ -6,11 +6,11 @@
         <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.GradientActiveCaptionColorKey}}"/>
     </Window.Background>
     <Grid>
-        <TextBox HorizontalAlignment="Left" Height="297" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="483"/>
-        <TextBox HorizontalAlignment="Left" Height="117" Margin="0,336,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="483"/>
-        <Button Content="File" HorizontalAlignment="Left" Margin="10,311,0,0" VerticalAlignment="Top" Width="75"/>
-        <Button Content="History" HorizontalAlignment="Left" Margin="90,311,0,0" VerticalAlignment="Top" Width="75"/>
-        <Button Content="Send" HorizontalAlignment="Left" Margin="408,458,0,0" VerticalAlignment="Top" Width="75"/>
+        <TextBox x:Name="msgTextBox" HorizontalAlignment="Left" Height="297" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="483"/>
+        <TextBox x:Name="inTextBox" HorizontalAlignment="Left" Height="117" Margin="0,336,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="483"/>
+        <Button Content="File" HorizontalAlignment="Left" Margin="10,311,0,0" VerticalAlignment="Top" Width="75" Tag="file" Click="Button_Click"/>
+        <Button Content="History" HorizontalAlignment="Left" Margin="90,311,0,0" VerticalAlignment="Top" Width="75" Tag="history" Click="Button_Click"/>
+        <Button Content="Send" HorizontalAlignment="Left" Margin="408,458,0,0" VerticalAlignment="Top" Width="75" Tag="send" Click="Button_Click"/>
         <TextBox HorizontalAlignment="Left" Height="469" Margin="496,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="202"/>
 
     </Grid>

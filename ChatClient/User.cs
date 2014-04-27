@@ -36,6 +36,7 @@ namespace ChatClient
             get { return iP; }
             set { iP = value; }
         }
-
+        public User()
+        { }
     }
 }

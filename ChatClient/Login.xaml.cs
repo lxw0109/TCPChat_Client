@@ -24,11 +24,19 @@ namespace ChatClient
         MainWindow win;
         // 程序最主要的窗体.
         UserAndGroup uag;
+        // 当前登录的用户名
+        string userName;
         //属性
         public UserAndGroup Uag
         {
             get { return this.uag; }
         }
+        public string UserName
+        {
+            get { return this.userName; }
+        }
+
+
 
         public Login(MainWindow obj)
         {
@@ -46,7 +54,7 @@ namespace ChatClient
                 #region login
                 case "login":
                     {
-                        string userName = this.userNameTextBox.Text.Trim();
+                        this.userName = this.userNameTextBox.Text.Trim();
                         if (string.IsNullOrEmpty(userName))
                         {
                             MessageBox.Show("请输入合法的用户名");
@@ -57,22 +65,10 @@ namespace ChatClient
                             uag = new UserAndGroup(this.win);
                             uag.Show();
 
-                            /*//public int MessageID;
-                            string fromUserName;
-                            string toUserName;
-                            //int isRead;
-                            string dateLine;
-                            int type;
-                            string messageContent;
-                            //string filePath;
-                            string groupName;
-                            //string fromIP;
-                            //int isJoin;*/
-
                             // 发送上线包
                             Message msg = new Message();
                             // lxw
-                            msg.FromUserName = userName;//"Charlie";
+                            msg.FromUserName = this.userName;//"Charlie";
                             msg.ToUserName = "Lee";
                             msg.DateLine = DateTime.Now.ToString();
                             msg.Type = 0;

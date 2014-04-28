@@ -19,9 +19,12 @@ namespace ChatClient
     // 为了listview的显示, 与GridView绑定数据
     public class UsersList
     {
-        public string UsersName { get; set; }
-        public string IsOnline { get; set; }
-        public string IfNewMsg { get; set; }
+        string usersName;
+        string isOnline;
+        string ifNewMsg;
+        public string UsersName { get { return this.usersName; } set { this.usersName = value;} }
+        public string IsOnline { get { return this.isOnline; } set { this.isOnline = value; } }
+        public string IfNewMsg { get { return this.ifNewMsg; } set { this.ifNewMsg = value; } }
     }
     /// <summary>
     /// UserAndGroup.xaml 的交互逻辑
@@ -47,12 +50,20 @@ namespace ChatClient
         {
             InitializeComponent();
             this.win = obj;
+            this.Title = "Welcome, " + this.win.Ln.UserName + "!";
             this.Closed += new EventHandler(this.win.thread_Closed);
         }
 
         // 更新用户列表
         public void updateUserList(List<User> userList)
         {
+            // 两个list得同步, 都得先清空一下
+            this.listview.Dispatcher.Invoke((Action)delegate()
+            {
+                collection.Clear();
+                this.userInList_List.Clear();
+            });
+
             int length = userList.Count;
             for (int i = 0; i < length; ++i)
             {
@@ -81,11 +92,28 @@ namespace ChatClient
             {
                 if (number != 0)
                 {
-                    collection[index].IfNewMsg = number.ToString();
+                    string name = collection[index].UsersName;
+                    string online = collection[index].IsOnline;
+                    collection[index] = new UsersList
+                        {
+                            UsersName = name,
+                            IsOnline = online,
+                            IfNewMsg = number.ToString()
+                        };
+                    
+                    //collection[index].IfNewMsg = number.ToString();
                 }
                 else 
                 {
-                    collection[index].IfNewMsg = "";
+                    string name = collection[index].UsersName;
+                    string online = collection[index].IsOnline;
+                    collection[index] = new UsersList
+                    {
+                        UsersName = name,
+                        IsOnline = online,
+                        IfNewMsg = ""
+                    };
+                    //collection[index].IfNewMsg = "";
                 }
             });
         }

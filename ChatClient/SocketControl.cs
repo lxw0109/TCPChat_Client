@@ -66,7 +66,7 @@ namespace ChatClient
                     catch
                     {
                         LogAction("服务器" + ClientSockets.RemoteEndPoint.ToString() + "断开连接！");
-                        Access(MainWindow.ServerIP, AccessAction);
+                        //Access(MainWindow.ServerIP, AccessAction);
                     }
                 }, null);
         }

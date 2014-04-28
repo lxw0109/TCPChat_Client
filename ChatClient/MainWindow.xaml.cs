@@ -139,27 +139,20 @@ namespace ChatClient
                     case 5://接收文字消息
                         {
                             // 1.显示出来[与该FromUserName的聊天窗口已经打开] 或者 2.添加到FromUserName的MsgList中[还没有打开聊天窗口]
-                            string srcUser = msg.FromUserName;
                             int index = 0;
-                            foreach(UserInList uil in this.ln.Uag.UserInList_List)
-                            {                                
-                                if(uil.USER.UserName == srcUser)    // 找到要处理的用户
-                                {
-                                    if (uil.ComWin == null)     // 2. 没有打开聊天窗口
-                                    {
-                                        uil.MsgList.Add(msg);
-                                        // UserAndGroup窗体中提示有未读消息
-                                        this.ln.Uag.updateUserListItem(index, uil.MsgList.Count);
-                                    }
-                                    else    // 1. 已经打开聊天窗口
-                                    {
-                                        uil.ComWin.updateMsgTextBox(srcUser + "  " + msg.DateLine + " :\r\n" + 
-                                                                    msg.MessageContent + "\r\n");
-                                    }
-                                    break;
-                                }
-                                index ++;
+                            UserInList fromUser = null;
+                            getUserIndex(ref fromUser, ref index, msg.FromUserName);
+                            if (fromUser.ComWin == null)     // 2. 没有打开聊天窗口
+                            {
+                                fromUser.MsgList.Add(msg);
+                                // UserAndGroup窗体中提示有未读消息
+                                this.ln.Uag.updateUserListItem(index, fromUser.MsgList.Count);
                             }
+                            else    // 1. 已经打开聊天窗口
+                            {
+                                fromUser.ComWin.updateMsgTextBox(msg.FromUserName + "  " + msg.DateLine + " :\r\n" +
+                                                            msg.MessageContent + "\r\n");
+                            }                             
                         }
                         break;
                     case 11://加群回应
@@ -168,31 +161,33 @@ namespace ChatClient
                             UpdateGetMsgTextBox(false, msg.MessageContent);
                         });
                         break;
-                    case 7://发送文件请求
+                    case 7:// 对"发送文件请求"进行处理, 即发送回应
                         {
-                            InfoTB.Dispatcher.Invoke((Action)delegate()
+                            /*InfoTB.Dispatcher.Invoke((Action)delegate()
                             {
                                 UpdateGetMsgTextBox(false, msg.FromUserName + "准备向您发送文件" + msg.MessageContent);
-                            });
-
+                            });*/
+                            
                             Message newmsg = new Message();
-                            newmsg.FromUserName = "Charlie";
-                            newmsg.ToUserName = "Lee";
+                            newmsg.FromUserName = this.ln.UserName;//"Charlie";
+                            newmsg.ToUserName = msg.FromUserName;//"Lee";
                             newmsg.DateLine = DateTime.Now.ToString();
-                            newmsg.Type = 8;
+                            newmsg.Type = 8; //文件请求的应答
                             newmsg.MessageContent = "拒绝";
                             newmsg.FilePath = msg.FilePath;
 
-                            if (MessageBox.Show(string.Format(
-                            "是否接收文件 {0}，来自 {1}。",
-                            msg.MessageContent,
-                            msg.FromUserName),
-                            "接收文件",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            if (
+                                MessageBox.Show(string.Format("是否接收文件 {0}，来自 {1}。", msg.MessageContent, msg.FromUserName),
+                                                "接收文件",
+                                                MessageBoxButton.YesNo,
+                                                MessageBoxImage.Question)
+                                == 
+                                MessageBoxResult.Yes
+                                )
                             {
                                 newmsg.MessageContent = "同意";
                             }
+
                             try
                             {
                                 socket.Send(newmsg);
@@ -205,71 +200,145 @@ namespace ChatClient
                         }
                         break;
                     case 8://文件请求回应
-                        if (msg.MessageContent == "同意")
                         {
-                            InfoTB.Dispatcher.Invoke((Action)delegate()
+                            // 查找要处理的用户
+                            int index = 0;
+                            UserInList fromUser = null;
+                            getUserIndex(ref fromUser, ref index, msg.FromUserName);
+                            
+                             if (msg.MessageContent == "同意")
                             {
-                                UpdateGetMsgTextBox(false, "对方同意接受文件！");
-                            });
-                            try
-                            {
-                                //创建一个文件对象  
-                                FileInfo EzoneFile = new FileInfo(msg.FilePath);
-                                //打开文件流  
-                                FileStream EzoneStream = EzoneFile.OpenRead();
-                                int PacketSize = 1024;
-                                byte[] data = new byte[PacketSize];
-
-                                int PacketCount = (int)(EzoneStream.Length / PacketSize);
-                                //最后一个包的大小  
-                                int LastDataPacket = (int)(EzoneStream.Length - ((long)(PacketSize * PacketCount)));  
-
-                                Message Filemsg = new Message();
-                                Filemsg.FromUserName = "Charlie";
-                                Filemsg.ToUserName = "Lee";
-                                Filemsg.DateLine = DateTime.Now.ToString();
-                                Filemsg.Type = 9;
-                                Filemsg.FilePath = msg.FilePath;
-                                Filemsg.MessageID = PacketCount + 1;//将这个作为文件块数量传递
-
-                                for (int i = 0; i < PacketCount; i++)
+                                /*InfoTB.Dispatcher.Invoke((Action)delegate()
                                 {
-                                    EzoneStream.Read(data, 0, data.Length);
-                                    Filemsg.MessageContent = Encoding.Default.GetString(data);
-                                    socket.Send(Filemsg);
-                                    Thread.Sleep(100);
+                                    UpdateGetMsgTextBox(false, "对方同意接受文件！");
+                                });*/
+
+                                try
+                                {
+                                    // 提示对方同意接收
+                                    try
+                                    {
+                                        if (fromUser.ComWin == null)     // 2. 没有打开聊天窗口
+                                        {
+                                            fromUser.MsgList.Add(msg);
+                                            // UserAndGroup窗体中提示有未读消息
+                                            this.ln.Uag.updateUserListItem(index, fromUser.MsgList.Count);
+                                        }
+                                        else    // 1. 已经打开聊天窗口
+                                        {
+                                            fromUser.ComWin.updateMsgTextBox(msg.FromUserName + "  " + msg.DateLine + " :\r\n" +
+                                                                        "同意接收文件" + "\r\n");
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        throw new Exception("显示提示信息出错.");
+                                    }
+
+                                    //创建一个文件对象
+                                    FileInfo EzoneFile = new FileInfo(msg.FilePath);
+                                    //打开文件流  
+                                    FileStream EzoneStream = EzoneFile.OpenRead();
+                                    int PacketSize = 1024;
+                                    byte[] data = new byte[PacketSize];
+
+                                    int PacketCount = (int)(EzoneStream.Length / PacketSize);
+                                    //最后一个包的大小  
+                                    int LastDataPacket = (int)(EzoneStream.Length - ((long)(PacketSize * PacketCount)));
+
+                                    Message Filemsg = new Message();
+                                    Filemsg.FromUserName = this.Ln.UserName;//"Charlie";
+                                    Filemsg.ToUserName = msg.FromUserName;//"Lee";
+                                    Filemsg.DateLine = DateTime.Now.ToString();
+                                    Filemsg.Type = 9; //文件内容
+                                    Filemsg.FilePath = msg.FilePath;
+                                    Filemsg.MessageID = PacketCount + 1;//将这个作为文件块数量传递
+
+                                    for (int i = 0; i < PacketCount; i++)
+                                    {
+                                        EzoneStream.Read(data, 0, data.Length);
+                                        Filemsg.MessageContent = Encoding.Default.GetString(data);
+                                        socket.Send(Filemsg);
+                                        Thread.Sleep(100);
+                                    }
+                                    if (LastDataPacket != 0)
+                                    {
+                                        data = new byte[LastDataPacket];
+                                        EzoneStream.Read(data, 0, data.Length);
+                                        Filemsg.MessageContent = Encoding.Default.GetString(data);
+                                        socket.Send(Filemsg);
+                                    }
+
+                                    EzoneStream.Close();
+
+                                    // 提示文件发送完毕
+                                    try
+                                    {
+                                        if (fromUser.ComWin == null)     // 2. 没有打开聊天窗口
+                                        {
+                                            fromUser.MsgList.Add(msg);
+                                            // UserAndGroup窗体中提示有未读消息
+                                            this.ln.Uag.updateUserListItem(index, fromUser.MsgList.Count);
+                                        }
+                                        else    // 1. 已经打开聊天窗口
+                                        {
+                                            fromUser.ComWin.updateMsgTextBox(msg.FromUserName + "  " + msg.DateLine + " :\r\n" +
+                                                                        "文件发送完毕" + "\r\n");
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        throw new Exception("显示提示信息出错.");
+                                    }
                                 }
-                                if (LastDataPacket != 0)
-                                {
-                                    data = new byte[LastDataPacket];
-                                    EzoneStream.Read(data, 0, data.Length);
-                                    Filemsg.MessageContent = Encoding.Default.GetString(data);
-                                    socket.Send(Filemsg);
-                                }  
-
-                                EzoneStream.Close();
+                                catch (Exception ee)
+                                { }
                             }
-                            catch (Exception ee)
-                            { }
-                        }
-                        else
-                        {
-                            InfoTB.Dispatcher.Invoke((Action)delegate()
+                            else
                             {
-                                UpdateGetMsgTextBox(false, msg.MessageContent);
-                            });
+                                /*InfoTB.Dispatcher.Invoke((Action)delegate()
+                                {
+                                    UpdateGetMsgTextBox(false, msg.MessageContent);
+                                });*/
+
+                                //提示对方拒绝接收文件
+                                try
+                                {
+                                    if (fromUser.ComWin == null)     // 2. 没有打开聊天窗口
+                                    {
+                                        fromUser.MsgList.Add(msg);
+                                        // UserAndGroup窗体中提示有未读消息
+                                        this.ln.Uag.updateUserListItem(index, fromUser.MsgList.Count);
+                                    }
+                                    else    // 1. 已经打开聊天窗口
+                                    {
+                                        fromUser.ComWin.updateMsgTextBox(msg.FromUserName + "  " + msg.DateLine + " :\r\n" +
+                                                                    "拒绝接收文件" + "\r\n");
+                                    }
+                                }
+                                catch
+                                {
+                                    throw new Exception("显示提示信息出错.");
+                                }
+                            }
                         }
                         break;
                     case 9://文件内容
                         try
                         {
                             byte[] dataRecv = Encoding.Default.GetBytes(msg.MessageContent);
-
-                            if (filepath == "" || filepath != msg.FilePath)
+                            
+                            if (filepath == "" || filepath != msg.FilePath) // 不是同一个文件,则新开一个文件(写入该文件)
                             {
-                                MyFileStream = new FileStream(msg.FilePath+"1", FileMode.Create, FileAccess.Write);
-                                filepath = msg.FilePath;
-                                Size = msg.MessageID;
+                                // FileMode这一个字段{就决定了,能否支持多文件传输.}   还是有问题的(因为filepath和Size的共享问题).
+                                //MyFileStream = new FileStream(msg.FilePath + "1", FileMode.Create, FileAccess.Write);
+                                MyFileStream = new FileStream(msg.FilePath + "1", FileMode.OpenOrCreate, FileAccess.Write);
+                                filepath = msg.FilePath;    // 上一次写入的文件, 该变量多个线程共享
+                                Size = msg.MessageID;   // 该变量多个线程共享
+                            }
+                            else //同一个文件
+                            {
+                                // 什么都不做,继续接收即可
                             }
                             MyFileStream.Write(dataRecv, 0, dataRecv.Length);
                             Size--;
@@ -277,10 +346,34 @@ namespace ChatClient
                             if (Size == 0)
                             {
                                 MyFileStream.Close();
-                                InfoTB.Dispatcher.Invoke((Action)delegate()
+                                /*InfoTB.Dispatcher.Invoke((Action)delegate()
                                 {
                                     UpdateGetMsgTextBox(false, msg.FilePath + "接受完成！");
-                                });
+                                });*/
+
+                                // 查找要处理的用户
+                                int index = 0;
+                                UserInList fromUser = null;
+                                getUserIndex(ref fromUser, ref index, msg.FromUserName);
+                                try
+                                {
+                                    if (fromUser.ComWin == null)     // 2. 没有打开聊天窗口
+                                    {
+                                        fromUser.MsgList.Add(msg);
+                                        // UserAndGroup窗体中提示有未读消息
+                                        this.ln.Uag.updateUserListItem(index, fromUser.MsgList.Count);
+                                    }
+                                    else    // 1. 已经打开聊天窗口
+                                    {
+                                        fromUser.ComWin.updateMsgTextBox(msg.FromUserName + "  " + msg.DateLine + " :\r\n" +
+                                                                    "文件接收完成!" + "\r\n");
+                                    }
+                                }
+                                catch
+                                {
+                                    throw new Exception("显示提示信息出错.");
+                                }
+
                             }
                         }
                         catch
@@ -303,6 +396,20 @@ namespace ChatClient
                     UpdateGetMsgTextBox(false, msg);
                 });
             };
+        }
+
+        // 得到当前是和哪个用户在聊天, 以及他在用户列表中的index
+        public void getUserIndex(ref UserInList fromUser, ref int index, string srcUser)
+        {
+            foreach (UserInList uil in this.ln.Uag.UserInList_List)
+            {
+                if (uil.USER.UserName == srcUser)    // 找到要处理的用户
+                {
+                    fromUser = uil;
+                    break;
+                }
+                index++;
+            }
         }
 
         //启动监听(子线程)

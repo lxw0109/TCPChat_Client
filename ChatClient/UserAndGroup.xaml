@@ -25,7 +25,18 @@
                 </ListView>
             </Grid>
             </TabItem>
-            <TabItem Header="Groups">                    
+            <TabItem Header="Groups">
+                <Grid>
+                <ListView Name="groupListview"  HorizontalAlignment="Left" Height="610" VerticalAlignment="Top" Width="282" ItemsSource="{Binding GroupCollection}" Margin="0,-1,0,0">
+                    <ListView.View>
+                        <GridView>
+                                <GridViewColumn Header="组名" Width="275"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+                <Button Content="创建/加入群" HorizontalAlignment="Left" Margin="197,617,0,0" VerticalAlignment="Top" Width="75" Height="27" Click="Button_Click"/>
+                <TextBox Name="groupNameTextBox" HorizontalAlignment="Left" Height="27" Margin="0,617,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="192"/>
+                </Grid>
             </TabItem>
         </TabControl>         
     </Grid>

@@ -17,6 +17,8 @@ using Newtonsoft.Json;
 using System.Threading;
 using System.IO;
 
+using System.Windows.Forms;
+
 //改动的地方 //lxw
 
 namespace ChatClient
@@ -49,9 +51,8 @@ namespace ChatClient
         {
             get { return this.ln; }
         }
-
-
-
+        
+        
         public MainWindow()
         {
             InitializeComponent();
@@ -72,6 +73,7 @@ namespace ChatClient
         }
 
         //建立托管
+        [STAThread]
         public void ActionInit()
         {
             //建立连接后准备接受
@@ -88,7 +90,7 @@ namespace ChatClient
                     }
                     catch (Exception exp)
                     {
-                        MessageBox.Show(exp.Message, "错误");
+                        System.Windows.MessageBox.Show(exp.Message, "错误");
                     }
                 });
 
@@ -102,7 +104,8 @@ namespace ChatClient
                 // lxw ADD HERE.
                 switch (msg.Type)
                 {
-                    case 1://用户列表[接收]                        
+                    #region case 1: 用户列表
+                    case 1://用户列表[接收]
                         {
                             /*InfoTB.Dispatcher.Invoke((Action)delegate()
                             {
@@ -116,6 +119,9 @@ namespace ChatClient
                             ln.Uag.updateUserList(userList);
                         }
                         break;
+                    #endregion
+
+                    #region case 3: 查询是否在线的请求
                     case 3://查询是否在线的请求[接收该包 then 发送新包]
                         {
                             // 收到 type == 3后,发送type == 4(在线请求的回应)的包
@@ -131,11 +137,14 @@ namespace ChatClient
                             }
                             catch (Exception ecp)
                             {
-                                MessageBox.Show(ecp.Message, "错误");
+                                System.Windows.MessageBox.Show(ecp.Message, "错误");
                                 return;
                             }
                         }
                         break;
+                    #endregion
+
+                    #region case 5: 接收文字消息
                     case 5://接收文字消息
                         {
                             // 1.显示出来[与该FromUserName的聊天窗口已经打开] 或者 2.添加到FromUserName的MsgList中[还没有打开聊天窗口]
@@ -155,12 +164,9 @@ namespace ChatClient
                             }                             
                         }
                         break;
-                    case 11://加群回应
-                        InfoTB.Dispatcher.Invoke((Action)delegate()
-                        {
-                            UpdateGetMsgTextBox(false, msg.MessageContent);
-                        });
-                        break;
+                    #endregion
+
+                    #region case 7: 对"发送文件请求"进行处理, 即发送回应
                     case 7:// 对"发送文件请求"进行处理, 即发送回应
                         {
                             /*InfoTB.Dispatcher.Invoke((Action)delegate()
@@ -177,7 +183,7 @@ namespace ChatClient
                             newmsg.FilePath = msg.FilePath;
 
                             if (
-                                MessageBox.Show(string.Format("是否接收文件 {0}，来自 {1}。", msg.MessageContent, msg.FromUserName),
+                                System.Windows.MessageBox.Show(string.Format("是否接收文件 {0}，来自 {1}。", msg.MessageContent, msg.FromUserName),
                                                 "接收文件",
                                                 MessageBoxButton.YesNo,
                                                 MessageBoxImage.Question)
@@ -194,11 +200,14 @@ namespace ChatClient
                             }
                             catch (Exception ecp)
                             {
-                                MessageBox.Show(ecp.Message, "错误");
+                                System.Windows.MessageBox.Show(ecp.Message, "错误");
                                 return;
                             }
                         }
                         break;
+                    #endregion
+
+                    #region case 8: 文件请求回应
                     case 8://文件请求回应
                         {
                             // 查找要处理的用户
@@ -323,6 +332,9 @@ namespace ChatClient
                             }
                         }
                         break;
+                    #endregion
+
+                    #region case 9: 文件内容
                     case 9://文件内容
                         try
                         {
@@ -330,10 +342,22 @@ namespace ChatClient
                             
                             if (filepath == "" || filepath != msg.FilePath) // 不是同一个文件,则新开一个文件(写入该文件)
                             {
+                                ThreadStart ts = new ThreadStart(recvFileName);
+                                Thread thread = new Thread(ts);
+                                thread.SetApartmentState(ApartmentState.STA);
+                                thread.Start();                                
+
+                                //SaveFileDialog sfd = new SaveFileDialog();
+                                //sfd.ShowDialog();
+                                
+                                // 同步
+                                thread.Join();
+
                                 // FileMode这一个字段{就决定了,能否支持多文件传输.}   还是有问题的(因为filepath和Size的共享问题).
-                                //MyFileStream = new FileStream(msg.FilePath + "1", FileMode.Create, FileAccess.Write);
-                                MyFileStream = new FileStream(msg.FilePath + "1", FileMode.OpenOrCreate, FileAccess.Write);
-                                filepath = msg.FilePath;    // 上一次写入的文件, 该变量多个线程共享
+                                //MyFileStream = new FileStream(msg.FilePath + "1", FileMode.Create, FileAccess.Write);                                
+                                MyFileStream = new FileStream(this.filepath, FileMode.OpenOrCreate, FileAccess.Write);
+
+                                this.filepath = msg.FilePath;    // 上一次写入的文件, 该变量多个线程共享
                                 Size = msg.MessageID;   // 该变量多个线程共享
                             }
                             else //同一个文件
@@ -373,17 +397,32 @@ namespace ChatClient
                                 {
                                     throw new Exception("显示提示信息出错.");
                                 }
-
                             }
                         }
                         catch
                         {
-                            InfoTB.Dispatcher.Invoke((Action)delegate()
+                            /*InfoTB.Dispatcher.Invoke((Action)delegate()
                             {
-                                UpdateGetMsgTextBox(false,  "接受错误！");
-                            });
+                                UpdateGetMsgTextBox(false, "接受错误！");
+                            });*/
                         }
                         break;
+                    #endregion
+
+                    #region case 10: 加群请求(群主接收)
+                    case 10: // 加群请求(群主接收)
+                        { 
+                        }
+                        break;
+                    #endregion
+
+                    #region case 11: 建群回应 | 加群回应
+                    case 11://加群回应 | 建群回应
+                        {
+                           
+                        }
+                        break;
+                    #endregion
                 }
             };
             #endregion
@@ -397,6 +436,17 @@ namespace ChatClient
                 });
             };
         }
+
+        // 文件另存为线程
+        public void recvFileName()
+        {
+            //string fileName = (string)arg;
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.ShowDialog();
+            this.filepath = sfd.FileName;
+        }
+
+
 
         // 得到当前是和哪个用户在聊天, 以及他在用户列表中的index
         public void getUserIndex(ref UserInList fromUser, ref int index, string srcUser)
@@ -439,7 +489,7 @@ namespace ChatClient
         {
             listenThread.Abort();
             Environment.Exit(0);//释放进程
-            Application.Current.Shutdown(-1);
+            System.Windows.Application.Current.Shutdown(-1);
         }
 
         private void UpdateGetMsgTextBox(bool sendMsg, string message)
@@ -475,7 +525,7 @@ namespace ChatClient
             }
             catch (Exception ecp)
             {
-                MessageBox.Show(ecp.Message, "错误");
+                System.Windows.MessageBox.Show(ecp.Message, "错误");
                 return;
             }
         }
@@ -497,7 +547,7 @@ namespace ChatClient
             }
             catch (Exception ecp)
             {
-                MessageBox.Show(ecp.Message, "错误");
+                System.Windows.MessageBox.Show(ecp.Message, "错误");
                 return;
             }
         }
@@ -525,13 +575,13 @@ namespace ChatClient
                     }
                     catch (Exception ecp)
                     {
-                        MessageBox.Show(ecp.Message, "错误");
+                        System.Windows.MessageBox.Show(ecp.Message, "错误");
                         return;
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message);
+                    System.Windows.MessageBox.Show(ex.Message);
                 }
             }            
         }

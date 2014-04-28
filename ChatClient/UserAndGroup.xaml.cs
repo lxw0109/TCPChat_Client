@@ -37,8 +37,12 @@ namespace ChatClient
         private int number = 0;
         // listview中的用户的信息
         private List<UserInList> userInList_List = new List<UserInList>();
-        // 绑定显示数据
+        // groupListview中的组的信息
+        //private List<string> groupNameList = new List<string>();
+        // 用户的列表 绑定显示数据
         public ObservableCollection<UsersList> collection = new ObservableCollection<UsersList>();
+        // 组的列表 绑定显示数据
+        public ObservableCollection<string> groupCollection = new ObservableCollection<string>();
         
         // 属性
         public List<UserInList> UserInList_List
@@ -52,6 +56,37 @@ namespace ChatClient
             this.win = obj;
             this.Title = "Welcome, " + this.win.Ln.UserName + "!";
             this.Closed += new EventHandler(this.win.thread_Closed);
+        }
+
+        // 更新组列表
+        public void updateGroupList(List<string> groupList)
+        {
+            // 两个list得同步, 都得先清空一下
+            this.groupListview.Dispatcher.Invoke((Action)delegate()
+            {
+                groupCollection.Clear();
+                //groupNameList.Clear();//没必要
+            });
+
+            int length = groupList.Count;
+            for (int i = 0; i < length; ++i)
+            {
+                string str = groupList[i];
+                if (!string.IsNullOrEmpty(str))
+                {
+                    this.groupListview.Dispatcher.Invoke((Action)delegate()
+                    {
+                        groupCollection.Add(str);
+                    });
+                    //this.groupNameList.Add(str);
+                }
+            }
+        }
+
+        // 更新组列表中的某一项的信息
+        public void updateGroupListItem(int index, int number)   // index要更新的项的索引
+        {
+            // 这个方法在GroupList中应该用不到
         }
 
         // 更新用户列表
@@ -99,8 +134,7 @@ namespace ChatClient
                             UsersName = name,
                             IsOnline = online,
                             IfNewMsg = number.ToString()
-                        };
-                    
+                        };                    
                     //collection[index].IfNewMsg = number.ToString();
                 }
                 else 
@@ -118,21 +152,46 @@ namespace ChatClient
             });
         }
 
-        // Simulate adding elements into the listview.
+        // 发送 创建/加入 群的请求包
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            ++number;
-            collection.Add(new UsersList
+            if (string.IsNullOrEmpty(this.groupNameTextBox.Text.Trim()))
             {
-                UsersName = "lxw",
-                IsOnline = "Y",
-                IfNewMsg = "*" + number.ToString()
-            });
+                System.Windows.MessageBox.Show("请输入合法的群名!");
+            }
+            else
+            {
+                string input = this.groupNameTextBox.Text;
+                this.groupNameTextBox.Text = "";
+                
+                // 往服务器发送这个消息
+                Message msg = new Message();
+                msg.FromUserName = this.win.Ln.UserName;//"Charlie";
+                //msg.ToUserName = "";    // 无所谓
+                msg.DateLine = DateTime.Now.ToString();
+                msg.Type = 10;   // 文字消息
+                msg.GroupName = input;
+                msg.MessageContent = input;
+
+                try
+                {
+                    this.win.Socket.Send(msg);
+                }
+                catch (Exception ecp)
+                {
+                    System.Windows.MessageBox.Show(ecp.Message, "错误");
+                    return;
+                }
+            }
         }
 
         // 必须使用属性才行
         public ObservableCollection<UsersList> Collection
         { get { return collection; } }
+
+        public ObservableCollection<string> GroupCollection
+        { get { return groupCollection; } }
+
         
         // 选择某个用户, 设置并打开窗口
         private void listview_DoubleClick(object sender, MouseButtonEventArgs e)

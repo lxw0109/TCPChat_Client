@@ -78,7 +78,7 @@ namespace ChatClient
         public override void Access(string IP, System.Action AccessAciton)
         {
             ClientSockets = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            ClientSockets.Bind(new IPEndPoint(IPAddress.Any, 6331));
+            ClientSockets.Bind(new IPEndPoint(IPAddress.Any, 6332));
 
             //服务器的IP和端口
             IPEndPoint serverIP;

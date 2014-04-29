@@ -83,6 +83,19 @@ namespace ChatClient
             }
         }
 
+        // 在组列表中, 添加组
+        public void addIntoGroupList(string groupName)
+        {
+            if (!string.IsNullOrEmpty(groupName))
+            {
+                this.groupListview.Dispatcher.Invoke((Action)delegate()
+                {
+                    groupCollection.Add(groupName);
+                });
+                //this.groupNameList.Add(str);
+            }
+        }
+
         // 更新组列表中的某一项的信息
         public void updateGroupListItem(int index, int number)   // index要更新的项的索引
         {
@@ -228,6 +241,12 @@ namespace ChatClient
                 }
                 this.userInList_List[index].ComWin = com;
             }            
+        }
+
+        private void grouplistview_DoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            ComunicateGroup cg = new ComunicateGroup();
+            cg.Show();
         }
     }
 }

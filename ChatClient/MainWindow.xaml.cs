@@ -411,15 +411,79 @@ namespace ChatClient
 
                     #region case 10: 加群请求(群主接收)
                     case 10: // 加群请求(群主接收)
-                        { 
+                        {
+                            Message newmsg = new Message();
+                            newmsg.FromUserName = this.ln.UserName;//"Charlie";
+                            newmsg.ToUserName = msg.FromUserName;//"Lee";
+                            newmsg.DateLine = DateTime.Now.ToString();
+                            newmsg.Type = 11; //加群请求的应答
+                            newmsg.MessageContent = "拒绝";
+                            msg.IsJoin = 0;     // NOTE, 须有
+
+                            if (
+                                System.Windows.MessageBox.Show(string.Format("是否同意 {0} 加入群 {1}。", msg.FromUserName, msg.MessageContent),
+                                                "加群请求",
+                                                MessageBoxButton.YesNo,
+                                                MessageBoxImage.Question)
+                                ==
+                                MessageBoxResult.Yes
+                                )
+                            {
+                                newmsg.MessageContent = "同意";
+                                msg.IsJoin = 1; // NOTE, 须有
+                            }
+
+                            try
+                            {
+                                socket.Send(newmsg);
+                            }
+                            catch (Exception ecp)
+                            {
+                                System.Windows.MessageBox.Show(ecp.Message, "错误");
+                                return;
+                            }
                         }
                         break;
                     #endregion
 
                     #region case 11: 建群回应 | 加群回应
-                    case 11://加群回应 | 建群回应
+                    case 11://加群回应(请求者接收) | 建群回应(群主接收)
                         {
-                           
+                            if (msg.MessageContent.IndexOf("成功建群") > 0)     // 建群回应(群主接收)
+                            {
+                                // 把msg.GroupName添加群列表
+                                this.Ln.Uag.addIntoGroupList(msg.GroupName);
+                            }
+                            else    // 加群回应(请求者接收)
+                            {
+                                if (msg.IsJoin == 1)    // 同意加群
+                                {
+                                    System.Windows.MessageBox.Show(msg.MessageContent,
+                                                "同意加群",
+                                                MessageBoxButton.OK,
+                                                MessageBoxImage.Information);
+                                    // 把msg.GroupName添加群列表
+                                    this.Ln.Uag.addIntoGroupList(msg.GroupName);
+                                }
+                                else    // 拒绝加群(请求者接收)
+                                {
+                                    System.Windows.MessageBox.Show(msg.MessageContent,
+                                                "拒绝加群",
+                                                MessageBoxButton.OK,
+                                                MessageBoxImage.Information);
+                                }
+                            }
+                        }
+                        break;
+                    #endregion
+                        
+                    #region case 12: 群成员请求的应答
+                    case 12://群成员请求的应答
+                        {
+                            // 得到群成员列表
+                            // 接收到的msg.MessageContent是一个List<string>的JSON字符串
+                            List<string> memberList = JsonConvert.DeserializeObject<List<string>>(msg.MessageContent);
+
                         }
                         break;
                     #endregion

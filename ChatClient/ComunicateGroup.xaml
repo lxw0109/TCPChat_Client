@@ -1,0 +1,24 @@
+﻿<Window x:Class="ChatClient.ComunicateGroup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ComunicateGroup" Height="517.895" Width="704.211" Icon="Image/lxw.ico" ResizeMode="CanMinimize">
+    <Window.Background>
+        <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.GradientActiveCaptionColorKey}}"/>
+    </Window.Background>
+    <Grid>
+        <TextBox x:Name="msgTextBox" HorizontalAlignment="Left" Height="297" Margin="0,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="483"/>
+        <TextBox x:Name="inTextBox" HorizontalAlignment="Left" Height="117" Margin="0,336,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="483"/>
+        <Button Content="Send" HorizontalAlignment="Left" Margin="408,458,0,0" VerticalAlignment="Top" Width="75" Tag="send" Click="Button_Click"/>
+        <Grid>
+            <ListView Name="memberListview"  HorizontalAlignment="Left" Height="470" VerticalAlignment="Top" Width="193" ItemsSource="{Binding GroupCollection}" Margin="495,10,0,0">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="群成员列表" Width="190"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+        <Label Content="群聊的世界" HorizontalAlignment="Left" Margin="10,307,0,0" VerticalAlignment="Top" Width="70"/>
+
+    </Grid>
+</Window>

@@ -60,6 +60,10 @@
     <Compile Include="Comunicate.xaml.cs">
       <DependentUpon>Comunicate.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ComunicateGroup.xaml.cs">
+      <DependentUpon>ComunicateGroup.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="GroupInList.cs" />
     <Compile Include="Login.xaml.cs">
       <DependentUpon>Login.xaml</DependentUpon>
     </Compile>
@@ -70,6 +74,10 @@
     </Compile>
     <Compile Include="UserInList.cs" />
     <Page Include="Comunicate.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ComunicateGroup.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

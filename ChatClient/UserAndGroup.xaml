@@ -27,7 +27,7 @@
             </TabItem>
             <TabItem Header="Groups">
                 <Grid>
-                <ListView Name="groupListview"  HorizontalAlignment="Left" Height="610" VerticalAlignment="Top" Width="282" ItemsSource="{Binding GroupCollection}" Margin="0,-1,0,0">
+                    <ListView Name="groupListview"  HorizontalAlignment="Left" Height="610" VerticalAlignment="Top" Width="282" MouseDoubleClick="grouplistview_DoubleClick" ItemsSource="{Binding GroupCollection}" Margin="0,-1,0,0">
                     <ListView.View>
                         <GridView>
                                 <GridViewColumn Header="组名" Width="275"/>

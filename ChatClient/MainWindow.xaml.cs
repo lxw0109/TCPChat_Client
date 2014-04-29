@@ -166,6 +166,29 @@ namespace ChatClient
                         break;
                     #endregion
 
+                    #region case 6: 群消息
+                    case 6:// 群消息
+                        {
+                            int index = 0;
+                            GroupInList fromGroup = null;
+                            //index 对于群聊天来说暂时没有使用
+                            getGroupIndex(ref fromGroup, ref index, msg.GroupName);
+                            if (fromGroup.ComGroupWin != null)     // 已经打开群聊天窗口
+                            {
+                                fromGroup.ComGroupWin.updateMsgTextBox(msg.FromUserName + "  " + msg.DateLine + " :\r\n" +
+                                                            msg.MessageContent + "\r\n");
+                            }
+
+                            #region 暂时不处理
+                            else    // 没有打开群聊天窗口
+                            {
+                                // 暂时不处理
+                            }
+                            #endregion
+                        }
+                        break;
+                    #endregion
+
                     #region case 7: 对"发送文件请求"进行处理, 即发送回应
                     case 7:// 对"发送文件请求"进行处理, 即发送回应
                         {
@@ -418,7 +441,8 @@ namespace ChatClient
                             newmsg.DateLine = DateTime.Now.ToString();
                             newmsg.Type = 11; //加群请求的应答
                             newmsg.MessageContent = "拒绝";
-                            msg.IsJoin = 0;     // NOTE, 须有
+                            newmsg.IsJoin = 0;     // NOTE, 须有
+                            newmsg.GroupName = msg.GroupName;
 
                             if (
                                 System.Windows.MessageBox.Show(string.Format("是否同意 {0} 加入群 {1}。", msg.FromUserName, msg.MessageContent),
@@ -430,8 +454,9 @@ namespace ChatClient
                                 )
                             {
                                 newmsg.MessageContent = "同意";
-                                msg.IsJoin = 1; // NOTE, 须有
+                                newmsg.IsJoin = 1; // NOTE, 须有
                             }
+                           
 
                             try
                             {
@@ -483,7 +508,15 @@ namespace ChatClient
                             // 得到群成员列表
                             // 接收到的msg.MessageContent是一个List<string>的JSON字符串
                             List<string> memberList = JsonConvert.DeserializeObject<List<string>>(msg.MessageContent);
-
+                            int length = this.Ln.Uag.GroupNameList.Count;
+                            for(int i = 0; i < length; ++i)
+                            {
+                                if(this.Ln.Uag.GroupNameList[i].GroupName == msg.GroupName)
+                                {
+                                    this.Ln.Uag.GroupNameList[i].ComGroupWin.updateMemberList(memberList);
+                                    break;
+                                }
+                            }
                         }
                         break;
                     #endregion
@@ -509,8 +542,7 @@ namespace ChatClient
             sfd.ShowDialog();
             this.filepath = sfd.FileName;
         }
-
-
+        
 
         // 得到当前是和哪个用户在聊天, 以及他在用户列表中的index
         public void getUserIndex(ref UserInList fromUser, ref int index, string srcUser)
@@ -520,6 +552,20 @@ namespace ChatClient
                 if (uil.USER.UserName == srcUser)    // 找到要处理的用户
                 {
                     fromUser = uil;
+                    break;
+                }
+                index++;
+            }
+        }
+
+        // 得到当前是和哪个用户在聊天, 以及他在用户列表中的index
+        public void getGroupIndex(ref GroupInList fromGroup, ref int index, string groupName)
+        {
+            foreach (GroupInList gil in this.ln.Uag.GroupNameList)
+            {
+                if (gil.GroupName == groupName)    // 找到要处理的用户
+                {
+                    fromGroup = gil;
                     break;
                 }
                 index++;

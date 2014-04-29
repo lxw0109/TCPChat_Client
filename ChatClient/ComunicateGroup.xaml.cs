@@ -14,6 +14,8 @@ using System.Windows.Shapes;
 
 using System.Windows.Forms;
 
+using System.Collections.ObjectModel;
+
 namespace ChatClient
 {
     /// <summary>
@@ -23,29 +25,52 @@ namespace ChatClient
     {
         // 通过该对象使用MainWindow中的各个函数.
         MainWindow win;
-        // 当前聊天的用户名(跟哪个用户在聊天) -- 每个窗体只能有一个聊天的对象
-        string chatUser;
+        // 当前聊天的群组
+        string chatGroup;
         int index;
+        // 组成员的列表 绑定显示数据
+        public ObservableCollection<string> memberCollection = new ObservableCollection<string>();
 
-        /*public ComunicateGroup(MainWindow obj, int index)
+        // 属性
+        public ObservableCollection<string> MemberCollection
+        { get { return memberCollection; } }
+
+        // 更新组成员列表
+        public void updateMemberList(List<string> memberList)
+        {
+            // 先清空一下
+            this.memberListview.Dispatcher.Invoke((Action)delegate()
+            {
+                memberCollection.Clear();
+            });
+
+            int length = memberList.Count;
+            for (int i = 0; i < length; ++i)
+            {
+                if (!string.IsNullOrEmpty(memberList[i]))
+                {
+                    this.memberListview.Dispatcher.Invoke((Action)delegate()
+                    {
+                        memberCollection.Add(memberList[i]);
+                    });
+                }
+            }
+        }
+
+        public ComunicateGroup(MainWindow obj, int index)
         {
             InitializeComponent();
             this.win = obj;
-            this.chatUser = this.win.Ln.Uag.UserInList_List[index].USER.UserName;
-            this.Title += " \"" + this.chatUser + "\"";
+            this.chatGroup = this.win.Ln.Uag.GroupNameList[index].GroupName;
+            this.Title += ": \"" + this.chatGroup + "\"";
             this.index = index;
-            this.Closed += new EventHandler(comClosed);
-        }*/
-        public ComunicateGroup()
-        {
-            InitializeComponent();
+            this.Closed += new EventHandler(comGroupClosed);
         }
-        
 
-        // 关闭该聊天窗口后要更新UserInList_List中的ComWin属性
-        public void comClosed(object sender, EventArgs e)
+        // 关闭该聊天窗口后要更新GroupNameList中的ComGroupWin属性
+        public void comGroupClosed(object sender, EventArgs e)
         {
-            this.win.Ln.Uag.UserInList_List[this.index].ComWin = null;
+            this.win.Ln.Uag.GroupNameList[this.index].ComGroupWin = null;
         }
 
         public void updateMsgTextBox(string content)
@@ -56,95 +81,54 @@ namespace ChatClient
             });            
         }
 
-        public void clearMsgTextBox()
+        // 更新群成员列表
+        public void updateMemberList()
         {
-            this.msgTextBox.Dispatcher.Invoke((Action)delegate()
-            {
-                this.msgTextBox.Text = "";
-            });
+ 
         }
 
+        // 发送群消息
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            System.Windows.Controls.Button bt = (System.Windows.Controls.Button)sender;
-            switch (bt.Tag.ToString())
+           if (string.IsNullOrEmpty(this.inTextBox.Text.Trim()))
             {
-                case "send":
-                    {
-                        if (string.IsNullOrEmpty(this.inTextBox.Text.Trim()))
-                        {
-                            System.Windows.MessageBox.Show("请输入信息再发送!");
-                        }
-                        else 
-                        {
-                            // 此处需要用delegate吗?
-                            string input = this.inTextBox.Text;
-                            this.inTextBox.Text = "";
-                            this.msgTextBox.Text += this.win.Ln.UserName + "  " + DateTime.Now.ToString() + " :\r\n" 
-                                + input + "\r\n";                            
-                            
-                            // 往服务器发送这个消息
-                            //type , fromUserName , toUserName, DateLine , messageContent
-                            Message msg = new Message();
-                            // lxw
-                            msg.FromUserName = this.win.Ln.UserName;//"Charlie";
-                            msg.ToUserName = this.chatUser;//"Lee";
-                            msg.DateLine = DateTime.Now.ToString();
-                            msg.Type = 5;   // 文字消息
-                            msg.GroupName = "633";
-                            msg.MessageContent = input;
-
-                            try
-                            {
-                                this.win.Socket.Send(msg);
-                            }
-                            catch (Exception ecp)
-                            {
-                                System.Windows.MessageBox.Show(ecp.Message, "错误");
-                                return;
-                            }
-                        }
-                    }
-                    break;
-                case "file":// 发送文件
-                    { 
-                        // 发送文件请求
-                        System.Windows.Forms.OpenFileDialog ofd = new System.Windows.Forms.OpenFileDialog();
-                        ofd.Multiselect = false;
-                        if (ofd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                        {
-                            try
-                            {
-                                Message msg = new Message();
-                                msg.FromUserName = this.win.Ln.UserName;//"Charlie";
-                                msg.ToUserName = this.chatUser;//"Lee";
-                                msg.DateLine = DateTime.Now.ToString();
-                                msg.Type = 7;   //发送文件请求
-                                msg.MessageContent = ofd.FileName;  //ofd.FileName 是 "C:\\a.jpg"
-                                msg.FilePath = ofd.FileName;
-
-                                try
-                                {
-                                    this.win.Socket.Send(msg);
-                                }
-                                catch (Exception ecp)
-                                {
-                                    System.Windows.MessageBox.Show(ecp.Message, "错误");
-                                    return;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                System.Windows.MessageBox.Show(ex.Message);
-                            }
-                        }
-                    }
-                    break;
-                case "history":
-                    { 
-                    }
-                    break;
+                System.Windows.MessageBox.Show("请输入信息再发送!");
             }
+            else 
+            {
+                string input = this.inTextBox.Text;
+                this.inTextBox.Text = "";
+                this.msgTextBox.Text += this.win.Ln.UserName + "  " + DateTime.Now.ToString() + " :\r\n"
+                    + input + "\r\n";
+
+                // 往服务器发送这个消息
+                Message msg = new Message();
+                msg.FromUserName = this.win.Ln.UserName;//"Charlie";
+                //msg.ToUserName = this.chatGroup;//"Lee";
+                msg.DateLine = DateTime.Now.ToString();
+                msg.Type = 6;   // 群文字消息
+                msg.GroupName = this.chatGroup;
+                msg.MessageContent = input;
+
+                try
+                {
+                    this.win.Socket.Send(msg);
+                }
+                catch (Exception ecp)
+                {
+                    System.Windows.MessageBox.Show(ecp.Message, "错误");
+                    return;
+                }
+            }
+        }
+
+        private void Button_click1(object sender, RoutedEventArgs e)
+        {
+            this.memberListview.Dispatcher.Invoke((Action)delegate()
+            {
+                MemberCollection.Add("lxw");
+            });
+            //this.memberListview.Items.Add("Lee");
         }
     }
 }

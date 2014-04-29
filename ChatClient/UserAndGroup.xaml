@@ -14,7 +14,7 @@
             <TabItem Header="Users" Name="userstab">
             <Grid>
                 <Button Content="add" HorizontalAlignment="Left" Margin="197,-1,0,635" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
-                <ListView Name="listview"  HorizontalAlignment="Left" Height="657" VerticalAlignment="Top" Width="282" MouseDoubleClick="listview_DoubleClick" ItemsSource="{Binding Collection}" Margin="0,-1,0,0">
+                <ListView Name="listview"  HorizontalAlignment="Left" Height="657" VerticalAlignment="Top" Width="272" MouseDoubleClick="listview_DoubleClick" ItemsSource="{Binding Collection}" Margin="0,-1,0,0">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="用户名" Width="120" DisplayMemberBinding="{Binding UsersName}"/>
@@ -27,7 +27,7 @@
             </TabItem>
             <TabItem Header="Groups">
                 <Grid>
-                    <ListView Name="groupListview"  HorizontalAlignment="Left" Height="610" VerticalAlignment="Top" Width="282" MouseDoubleClick="grouplistview_DoubleClick" ItemsSource="{Binding GroupCollection}" Margin="0,-1,0,0">
+                    <ListView Name="groupListview"  HorizontalAlignment="Left" Height="610" VerticalAlignment="Top" Width="272" MouseDoubleClick="grouplistview_DoubleClick" ItemsSource="{Binding GroupCollection}" Margin="0,-1,0,0">
                     <ListView.View>
                         <GridView>
                                 <GridViewColumn Header="组名" Width="275"/>

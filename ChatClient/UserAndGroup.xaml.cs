@@ -38,16 +38,20 @@ namespace ChatClient
         // listview中的用户的信息
         private List<UserInList> userInList_List = new List<UserInList>();
         // groupListview中的组的信息
-        //private List<string> groupNameList = new List<string>();
+        private List<GroupInList> groupNameList = new List<GroupInList>();
         // 用户的列表 绑定显示数据
         public ObservableCollection<UsersList> collection = new ObservableCollection<UsersList>();
         // 组的列表 绑定显示数据
         public ObservableCollection<string> groupCollection = new ObservableCollection<string>();
-        
+
         // 属性
         public List<UserInList> UserInList_List
         {
             get { return this.userInList_List; }
+        }
+        public List<GroupInList> GroupNameList
+        {
+            get { return this.groupNameList; }
         }
 
         public UserAndGroup(MainWindow obj)
@@ -65,7 +69,7 @@ namespace ChatClient
             this.groupListview.Dispatcher.Invoke((Action)delegate()
             {
                 groupCollection.Clear();
-                //groupNameList.Clear();//没必要
+                groupNameList.Clear();
             });
 
             int length = groupList.Count;
@@ -78,7 +82,7 @@ namespace ChatClient
                     {
                         groupCollection.Add(str);
                     });
-                    //this.groupNameList.Add(str);
+                    this.groupNameList.Add(new GroupInList(str));
                 }
             }
         }
@@ -92,7 +96,7 @@ namespace ChatClient
                 {
                     groupCollection.Add(groupName);
                 });
-                //this.groupNameList.Add(str);
+                this.groupNameList.Add(new GroupInList(groupName));
             }
         }
 
@@ -123,8 +127,8 @@ namespace ChatClient
                         //this.listview.Items.Add(str);
                         collection.Add(new UsersList
                         {
-                            UsersName = str,//"lxw",
-                            IsOnline = (userList[i].IsOnline == 1) ? " " : "N", // 不在线才显示"N"
+                            UsersName = "   " + str,//"lxw",
+                            IsOnline = (userList[i].IsOnline == 1) ? " " : "   不在线", // 不在线才显示"N"
                             IfNewMsg = ""
                         });
                     });
@@ -146,8 +150,8 @@ namespace ChatClient
                         {
                             UsersName = name,
                             IsOnline = online,
-                            IfNewMsg = number.ToString()
-                        };                    
+                            IfNewMsg = "   " + number.ToString()
+                        };
                     //collection[index].IfNewMsg = number.ToString();
                 }
                 else 
@@ -211,6 +215,8 @@ namespace ChatClient
         {
             ListView lv = sender as ListView;
             int index = lv.SelectedIndex;
+            if (index < 0)
+                return;
             if (this.userInList_List[index].ComWin != null) //已经打开了
             {
                 //这句可以不要
@@ -240,13 +246,48 @@ namespace ChatClient
                     this.updateUserListItem(index, 0);  // 清除主界面中"新消息"提醒
                 }
                 this.userInList_List[index].ComWin = com;
-            }            
+            }
         }
 
         private void grouplistview_DoubleClick(object sender, MouseButtonEventArgs e)
         {
-            ComunicateGroup cg = new ComunicateGroup();
-            cg.Show();
+            ListView lv = sender as ListView;
+            int index = lv.SelectedIndex;
+            if (index < 0)
+                return;
+            if (this.groupNameList[index].ComGroupWin != null) //已经打开了
+            {
+                //这句可以不要
+                MessageBox.Show("群会话窗口已经打开");
+            }
+            else
+            {
+                ComunicateGroup groupWin = new ComunicateGroup(this.win, index);
+                
+                this.groupNameList[index].ComGroupWin = groupWin;
+                
+                // 更新群成员列表
+                // 1.发送 type == 12 的包, 返回成员列表
+                // 往服务器发送这个消息
+                Message msg = new Message();
+                msg.FromUserName = this.win.Ln.UserName;//"Charlie";
+                //msg.ToUserName = "";    // 无所谓
+                msg.DateLine = DateTime.Now.ToString();
+                msg.Type = 12;   // 文字消息
+                msg.GroupName = this.groupNameList[index].GroupName;
+
+                try
+                {
+                    this.win.Socket.Send(msg);
+                }
+                catch (Exception ecp)
+                {
+                    System.Windows.MessageBox.Show(ecp.Message, "错误");
+                    return;
+                }
+
+                groupWin.Show();
+            }
         }
     }
 }
